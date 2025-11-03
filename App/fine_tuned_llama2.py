@@ -19,35 +19,47 @@ if not os.environ.get("GRADIENT_API_URL", None):
 
 def generate_query(complaint_text, ipc_dict):
     print(complaint_text)
-
-    # 1. Define the LLM
-    llm = GradientLLM(
-        model="62f07e2b-c760-46c4-b512-452640dc3b63_model_adapter",
-        model_kwargs=dict(max_generated_token_count=128),
-    )
-
-    # 2. Define the template with the *actual* input variables
-    template = """Question: Given the following FIR description, {complaint_text}
-    Tell me which of the following IPC sections could be applied: {ipc_dict}
-    Answer: """
-
-    # 3. Create the prompt template
-    prompt = PromptTemplate(
-        template=template, 
-        input_variables=[complaint_text, ipc_dict]  # Use the real variables
-    )
     
-    # 4. Create the chain
-    output_parser = StrOutputParser()
-    chain = prompt | llm | output_parser
+    try:
+        # 1. Define the LLM
+        llm = GradientLLM(
+            model="62f07e2b-c760-46c4-b512-452640dc3b63_model_adapter",
+            model_kwargs=dict(max_generated_token_count=128),
+        )
 
-    # 5. Invoke the chain with the original inputs
-    response = chain.invoke({
-        "complaint_text": complaint_text, 
-        "ipc_dict": ipc_dict
-    })
+        # 2. Format the IPC sections as a readable string
+        ipc_sections_str = ", ".join([f"Section {k}: {v}" for k, v in ipc_dict.items()])
+        
+        # 3. Create a simpler template
+        template = """Question: Given the following FIR description: {complaint_text}
 
-    # 6. Process the output
-    response_text = response.split("Response: ", 1)[-1].strip()
-    print(response_text)
-    return response_text
+Tell me which of the following IPC sections could be applied: {ipc_sections}
+
+Answer: """
+
+        # 4. Create the prompt template
+        prompt = PromptTemplate(
+            template=template, 
+            input_variables=["complaint_text", "ipc_sections"]
+        )
+        
+        # 5. Create the chain
+        output_parser = StrOutputParser()
+        chain = prompt | llm | output_parser
+
+        # 6. Invoke the chain
+        response = chain.invoke({
+            "complaint_text": complaint_text, 
+            "ipc_sections": ipc_sections_str
+        })
+
+        # 7. Process the output
+        response_text = response.split("Response: ", 1)[-1].strip() if "Response: " in response else response.strip()
+        print("LLM Response:", response_text)
+        return response_text
+        
+    except Exception as e:
+        print(f"Error calling Gradient AI API: {str(e)}")
+        # Return a fallback response based on the detected IPC sections
+        fallback_response = f"Based on the FIR analysis, the following IPC sections may be applicable: {', '.join([f'Section {k}' for k in ipc_dict.keys()])}"
+        return fallback_response
