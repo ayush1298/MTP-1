@@ -12,7 +12,7 @@ from flask import session
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key'
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 def translate_text(text, src_lang='hi', dest_lang='en'):
     translator = GoogleTranslator(source=src_lang, target=dest_lang)

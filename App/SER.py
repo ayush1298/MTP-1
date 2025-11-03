@@ -16,7 +16,7 @@ top_k = 32                          #Number of passages we want to retrieve with
 
 
 # Load the Excel file
-excel_filepath = 'D:/MTP/App/updated_IPC.xlsx'
+excel_filepath = '/Users/ayushmunot/Downloads/RJPOLICE_HACK_765_NeuralNinjas_4/App/updated_IPC.xlsx'
 df = pd.read_excel(excel_filepath)
 
 # Extract documents from a specific column in the Excel file, e.g., 'document_column'
